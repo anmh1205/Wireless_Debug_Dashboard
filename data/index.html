@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AML Debug Dashboard</title>
+        <link rel="stylesheet" href="style.css">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>AML Debug Dashboard</h1>
+                <button id="addBoxBtn" class="btn">Add New Box</button>
+            </header>
+
+            <div id="boxContainer" class="box-container">
+                <!-- Boxes will be dynamically added here -->
+            </div>
+        </div>
+
+        <!-- Add Box Modal -->
+        <div id="addBoxModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Add New Box</h2>
+                <div class="form-group">
+                    <label for="boxName">Box Name:</label>
+                    <input type="text" id="boxName"
+                        placeholder="Enter box name">
+                </div>
+                <div class="form-group">
+                    <label for="boxId">Box ID:</label>
+                    <input type="number" id="boxId" min="0"
+                        placeholder="Enter box ID">
+                </div>
+                <button id="saveBoxBtn" class="btn">Save</button>
+            </div>
+        </div>
+
+        <!-- Load the optimized script -->
+        <script src="main.js"></script>
+    </body>
+</html>

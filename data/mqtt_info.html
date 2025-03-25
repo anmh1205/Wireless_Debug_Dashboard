@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>MQTT Connection Guide</title>
+        <link rel="stylesheet" href="style.css">
+        <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: monospace;
+        }
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>MQTT Connection Guide</h1>
+
+            <h2>Connection Details</h2>
+            <ul>
+                <li><strong>Broker address:</strong> <code
+                        id="broker-address">192.168.4.1</code></li>
+                <li><strong>Port:</strong> <code>1883</code> (MQTT standard
+                    port)</li>
+                <li><strong>WebSocket Port:</strong> <code>9001</code> <span
+                        id="mqtt-status">Checking...</span></li>
+                <li><strong>No authentication required</strong></li>
+            </ul>
+
+            <h2>Available Topics</h2>
+            <ul>
+                <li><code>dashboard/boxes</code> - List of all boxes</li>
+                <li><code>dashboard/update/{id}</code> - Update for a specific
+                    box with ID</li>
+                <li><code>dashboard/command</code> - Commands to the broker</li>
+            </ul>
+
+            <h2>Example Connection Code</h2>
+            <h3>Arduino/ESP32:</h3>
+            <pre>
+#include &lt;WiFi.h&gt;
+#include &lt;PubSubClient.h&gt;
+
+const char* ssid = "AML Debug Dashboard";
+const char* password = "aml305b4";
+const char* mqtt_server = "192.168.4.1";
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Connect to WiFi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  
+  // Connect to MQTT
+  client.setServer(mqtt_server, 1883);
+  
+  if (client.connect("ArduinoClient")) {
+    // Send data to box with ID 1
+    client.publish("dashboard/update/1", "42");
+  }
+}
+
+void loop() {
+  client.loop();
+}
+        </pre>
+
+            <h3>Python:</h3>
+            <pre>
+import paho.mqtt.client as mqtt
+
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code "+str(rc))
+
+client = mqtt.Client()
+client.on_connect = on_connect
+
+client.connect("192.168.4.1", 1883, 60)
+
+# Send data to box with ID 2
+client.publish("dashboard/update/2", "75")
+
+client.loop_forever()
+        </pre>
+
+            <a href="/" class="btn">Back to Dashboard</a>
+        </div>
+
+        <script>
+        document.getElementById('broker-address').textContent = window.location.hostname;
+    </script>
+        <script src="mqtt_config.js"></script>
+    </body>
+</html>

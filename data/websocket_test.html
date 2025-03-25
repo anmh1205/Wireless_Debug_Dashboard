@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WebSocket Test</title>
+    <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    pre { background: #f4f4f4; padding: 10px; border-radius: 4px; }
+    .log-entry { margin-bottom: 5px; }
+    button { padding: 10px; margin: 10px 0; }
+  </style>
+  </head>
+  <body>
+    <h1>WebSocket Test Page</h1>
+    <button id="connectBtn">Connect WebSocket</button>
+    <button id="clearLogBtn">Clear Log</button>
+    <div id="status">Status: Disconnected</div>
+    <h3>Message Log:</h3>
+    <div id="log"></div>
+
+    <script>
+    // Tracking variables
+    let ws = null;
+    let messageLog = [];
+    let processedMessages = new Map();
+    
+    // DOM references
+    const statusDiv = document.getElementById('status');
+    const logDiv = document.getElementById('log');
+    const connectBtn = document.getElementById('connectBtn');
+    const clearLogBtn = document.getElementById('clearLogBtn');
+    
+    // Setup event listeners
+    connectBtn.addEventListener('click', setupWebSocket);
+    clearLogBtn.addEventListener('click', () => {
+      logDiv.innerHTML = '';
+      messageLog = [];
+    });
+    
+    function log(message, type = 'info') {
+      const timestamp = new Date().toISOString();
+      const entry = document.createElement('pre');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${timestamp}] ${message}`;
+      logDiv.appendChild(entry);
+      
+      messageLog.push({ timestamp, message, type });
+      console.log(`[${timestamp}] ${message}`);
+    }
+    
+    function setupWebSocket() {
+      if (ws && ws.readyState !== WebSocket.CLOSED) {
+        log('WebSocket already connected or connecting', 'warning');
+        return;
+      }
+      
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      
+      log(`Connecting to WebSocket at ${wsUrl}`);
+      ws = new WebSocket(wsUrl);
+      
+      ws.onopen = function() {
+        log('WebSocket connected', 'success');
+        statusDiv.textContent = 'Status: Connected';
+        connectBtn.textContent = 'Reconnect WebSocket';
+      };
+      
+      ws.onclose = function() {
+        log('WebSocket disconnected', 'error');
+        statusDiv.textContent = 'Status: Disconnected';
+        connectBtn.textContent = 'Connect WebSocket';
+        ws = null;
+      };
+      
+      ws.onmessage = function(event) {
+        const hash = hashMessage(event.data);
+        const now = Date.now();
+        
+        if (processedMessages.has(hash)) {
+          const lastTime = processedMessages.get(hash);
+          const timeDiff = now - lastTime;
+          
+          log(`DUPLICATE message received after ${timeDiff}ms: ${event.data.substring(0, 100)}...`, 'warning');
+        } else {
+          log(`Message received: ${event.data.substring(0, 100)}...`);
+        }
+        
+        processedMessages.set(hash, now);
+        
+        // Clean up old entries
+        if (processedMessages.size > 100) {
+          const oldestKey = Array.from(processedMessages.keys())[0];
+          processedMessages.delete(oldestKey);
+        }
+      };
+      
+      ws.onerror = function(error) {
+        log(`WebSocket error: ${error}`, 'error');
+      };
+    }
+    
+    function hashMessage(message) {
+      let hash = 0;
+      for (let i = 0; i < message.length; i++) {
+        const char = message.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      return hash;
+    }
+    
+    // Show initial log entry
+    log('WebSocket test page loaded');
+  </script>
+  </body>
+</html>
